@@ -82,9 +82,7 @@ def make_input_fn(data_df, label_df, num_epochs=10, shuffle=True, batch_size=32)
         ds = ds.batch(batch_size).repeat(num_epochs)  
         return ds  # return a batch of the dataset
     return input_function  # return a function object for use
-
-def predict_linear_classifier():
-    
+   
 
 if __name__ == '__main__':
     dataset_path = '/home/lautaro/Cursos/FreeCodeCampMachineLearning/'
