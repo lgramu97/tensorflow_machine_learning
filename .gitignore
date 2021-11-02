@@ -1,5 +1,5 @@
 *.ipynb
-/__pycache__
-/GermanTrafficSignRecognition/Models
+__pycache__/
+GermanTrafficSignRecognition/Models/
 *.~lock
 
