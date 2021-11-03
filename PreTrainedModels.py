@@ -43,14 +43,6 @@ def format_example(image, label):
   return image, label
 
 
-def spy_data(train):
-    for image, label in train.take(5):
-        plt.figure()
-        plt.imshow(image)
-        plt.title(get_label_name(label))
-    plt.show()
-
-
 def preprocess_data(raw_train,raw_validation,raw_test):
     #map take all of the elements and apply the function.
     train = raw_train.map(format_example)
