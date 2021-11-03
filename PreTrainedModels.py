@@ -77,8 +77,38 @@ def preprocess_data(raw_train,raw_validation,raw_test):
     return train_batches, validation_batches, test_batches
 
 
+def plot_results(history):
+    acc = history.history['accuracy']
+    val_acc = history.history['val_accuracy']
+
+    loss = history.history['loss']
+    val_loss = history.history['val_loss']
+
+    plt.figure(figsize=(8, 8))
+    plt.subplot(2, 1, 1)
+    plt.plot(acc, label='Training Accuracy')
+    plt.plot(val_acc, label='Validation Accuracy')
+    plt.legend(loc='lower right')
+    plt.ylabel('Accuracy')
+    plt.ylim([min(plt.ylim()),1])
+    plt.title('Training and Validation Accuracy')
+
+    plt.subplot(2, 1, 2)
+    plt.plot(loss, label='Training Loss')
+    plt.plot(val_loss, label='Validation Loss')
+    plt.legend(loc='upper right')
+    plt.ylabel('Cross Entropy')
+    plt.ylim([0,1.0])
+    plt.title('Training and Validation Loss')
+    plt.xlabel('epoch')
+    plt.show()
+
+
 def run():
-        
+    
+    TRAIN = False
+    PREDICT = True
+
     #Download and get partitions. get_label_name is a method, recive a number and get the label.
     raw_train, raw_validation, raw_test, get_label_name = load_dataset()
     
@@ -86,6 +116,8 @@ def run():
     if False:
         spy_images_from_raw(raw_train,get_label_name)
     train, validation, test = preprocess_data(raw_train,raw_validation,raw_test)
+    class_names = [get_label_name(i) for i in range(0,2)]
+    print(class_names)
     #Lets see the final data how looks like.
     print(train)
     print(validation)
@@ -98,56 +130,77 @@ def run():
     for img, label in train.take(2):
         print("New shape:", img.shape)
 
-    #load a pretrained model. and use it to classify cats vs dogs.
-    base_model = load_dataset_pretrained()
-    for image, _ in train.take(1):
-        feature_batch = base_model(image)
-        print(feature_batch.shape) #(32, 5, 5, 1280)
+    if TRAIN:
+        #load a pretrained model. and use it to classify cats vs dogs.
+        base_model = load_dataset_pretrained()
+        for image, _ in train.take(1):
+            feature_batch = base_model(image)
+            print(feature_batch.shape) #(32, 5, 5, 1280)
 
-    #We dont want to train all the parametres, so we freeze it.
-    base_model.trainable = False
-    base_model.summary() #Trainable parameters = 0
+        #We dont want to train all the parametres, so we freeze it.
+        base_model.trainable = False
+        base_model.summary() #Trainable parameters = 0
 
-    #Now we must add our classification layer.
-    global_average_layer = tf.keras.layers.GlobalAveragePooling2D()
-    #and the prediction layer. We add a dense layer because we only have 2 classes to predict.
-    prediction_layer = keras.layers.Dense(1)
-    #and finally we create the model.
-    model = tf.keras.Sequential([
-            base_model,
-            global_average_layer,
-            prediction_layer
-            ])
-    os.system("clear")
-    model.summary()
+        #Now we must add our classification layer.
+        global_average_layer = tf.keras.layers.GlobalAveragePooling2D()
+        #and the prediction layer. We add a dense layer because we only have 2 classes to predict.
+        prediction_layer = keras.layers.Dense(1)
+        #and finally we create the model.
+        model = tf.keras.Sequential([
+                base_model,
+                global_average_layer,
+                prediction_layer
+                ])
+        os.system("clear")
+        model.summary()
 
-    #Set learning rate hyperparameter.
-    base_learning_rate = 0.0001
-    #Define optimizer, loss function, and metrics evaluation/training.
-    model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=base_learning_rate),
-              loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
-              metrics=['accuracy'])
-    
-    # We can evaluate the model right now to see how it does 
-    # before training it on our new images
-    initial_epochs = 3
-    validation_steps=20
-    loss0,accuracy0 = model.evaluate(validation, steps = validation_steps)
-    
-    # Now train the model with out dataset.
-    # Now we can train it on our images
-    history = model.fit(train,
-                        epochs=initial_epochs,
-                        validation_data=validation)
-    acc = history.history['accuracy']
-    loss = history.history['loss']
-    print(f'Train accuracy: {acc} , Train loss: {loss}')
-    
-    # we can save the model and reload it at anytime in the future
-    model.save("dogs_vs_cats.h5")  
-    new_model = tf.keras.models.load_model('dogs_vs_cats.h5')
+        #Set learning rate hyperparameter.
+        base_learning_rate = 0.0001
+        #Define optimizer, loss function, and metrics evaluation/training.
+        model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=base_learning_rate),
+                loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
+                metrics=['accuracy'])
+        
+        # We can evaluate the model right now to see how it does 
+        # before training it on our new images
+        initial_epochs = 3
+        validation_steps=20
+        loss0,accuracy0 = model.evaluate(validation, steps = validation_steps)
+        
+        # Now train the model with out dataset.
+        # Now we can train it on our images
+        history = model.fit(train,
+                            epochs=initial_epochs,
+                            validation_data=validation)
+        
+        plot_results(history)
+        
+        # we can save the model and reload it at anytime in the future
+        model.save("dogs_vs_cats.h5") 
 
+    if PREDICT: 
+        new_model = tf.keras.models.load_model('dogs_vs_cats.h5')
+        predictions = new_model.predict(test)
+     
+        # Retrieve a batch of images from the test set
+        image_batch, label_batch = test.as_numpy_iterator().next()
+        predictions = new_model.predict_on_batch(image_batch).flatten()
 
+        # Apply a sigmoid since our model returns logits
+        predictions = tf.nn.sigmoid(predictions)
+        predictions = tf.where(predictions < 0.5, 0, 1)
+
+        print('Predictions:\n', predictions.numpy())
+        print('Labels:\n', label_batch)
+        print('Classes:\n',class_names)
+        plt.figure(figsize=(10, 10))
+        for i in range(9):
+            ax = plt.subplot(3, 3, i + 1)
+            image = tf.cast((image_batch[i]*127.5 +1), tf.uint8) 
+            plt.imshow(image)
+            plt.title(class_names[predictions[i]])
+            plt.axis("off")
+        plt.show()
    
     
 if __name__ == '__main__':
