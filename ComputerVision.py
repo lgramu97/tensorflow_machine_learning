@@ -121,6 +121,9 @@ def run():
 
     plot_history(history)
 
+    test_loss, test_acc = model.evaluate(test_images,  test_labels, verbose=2)
+    print(f'Test accuracy: {test_acc}, Test loss: {test_loss}')
+
 
 if __name__ == '__main__':
     run()
