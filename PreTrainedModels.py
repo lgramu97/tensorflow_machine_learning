@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import tensorflow_datasets as tfds
 keras = tf.keras
-
+IMG_SIZE = 160
 
 def spy_images_from_raw(train_image,train_label):
     # display 2 images from the dataset
@@ -14,6 +14,25 @@ def spy_images_from_raw(train_image,train_label):
         plt.imshow(image)
         plt.title(train_label(label))
     plt.show()
+
+
+def load_dataset_pretrained():
+    '''
+    The model we are going to use as the convolutional base for our model is the **MobileNet V2**
+    developed at Google. This model is trained on 1.4 million images and has 1000 different classes.
+    We want to use this model but only its convolutional base. 
+    So, when we load in the model, we'll specify that we don't want to load the top (classification)
+    layer. We'll tell the model what input shape to expect and to use the predetermined 
+    weights from *imagenet* (Googles dataset).
+    '''
+    IMG_SHAPE = (IMG_SIZE, IMG_SIZE, 3)
+
+    # Create the base model from the pre-trained model MobileNet V2
+    base_model = tf.keras.applications.MobileNetV2(input_shape=IMG_SHAPE,
+                                                include_top=False,
+                                                weights='imagenet')
+    base_model.summary()
+    return base_model
 
 
 def load_dataset():
@@ -36,7 +55,6 @@ def format_example(image, label):
   """
   returns an image that is reshaped to IMG_SIZE
   """
-  IMG_SIZE = 160 # All images will be resized to 160x160
   image = tf.cast(image, tf.float32)
   image = (image/127.5) - 1
   image = tf.image.resize(image, (IMG_SIZE, IMG_SIZE))
@@ -60,6 +78,7 @@ def preprocess_data(raw_train,raw_validation,raw_test):
 
 
 def run():
+        
     #Download and get partitions. get_label_name is a method, recive a number and get the label.
     raw_train, raw_validation, raw_test, get_label_name = load_dataset()
     
@@ -77,10 +96,59 @@ def run():
         print("Original shape:", img.shape)
 
     for img, label in train.take(2):
-         print("New shape:", img.shape)
+        print("New shape:", img.shape)
 
+    #load a pretrained model. and use it to classify cats vs dogs.
+    base_model = load_dataset_pretrained()
+    for image, _ in train.take(1):
+        feature_batch = base_model(image)
+        print(feature_batch.shape) #(32, 5, 5, 1280)
 
+    #We dont want to train all the parametres, so we freeze it.
+    base_model.trainable = False
+    base_model.summary() #Trainable parameters = 0
+
+    #Now we must add our classification layer.
+    global_average_layer = tf.keras.layers.GlobalAveragePooling2D()
+    #and the prediction layer. We add a dense layer because we only have 2 classes to predict.
+    prediction_layer = keras.layers.Dense(1)
+    #and finally we create the model.
+    model = tf.keras.Sequential([
+            base_model,
+            global_average_layer,
+            prediction_layer
+            ])
+    os.system("clear")
+    model.summary()
+
+    #Set learning rate hyperparameter.
+    base_learning_rate = 0.0001
+    #Define optimizer, loss function, and metrics evaluation/training.
+    model.compile(optimizer=tf.keras.optimizers.RMSprop(lr=base_learning_rate),
+              loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
+              metrics=['accuracy'])
     
+    # We can evaluate the model right now to see how it does 
+    # before training it on our new images
+    initial_epochs = 3
+    validation_steps=20
+    loss0,accuracy0 = model.evaluate(validation, steps = validation_steps)
+    
+    # Now train the model with out dataset.
+    # Now we can train it on our images
+    history = model.fit(train,
+                        epochs=initial_epochs,
+                        validation_data=validation)
+    acc = history.history['accuracy']
+    loss = history.history['loss']
+    print(f'Train accuracy: {acc} , Train loss: {loss}')
+    
+    # we can save the model and reload it at anytime in the future
+    model.save("dogs_vs_cats.h5")  
+    new_model = tf.keras.models.load_model('dogs_vs_cats.h5')
+
+
+   
     
 if __name__ == '__main__':
     run()
