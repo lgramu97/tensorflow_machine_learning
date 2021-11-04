@@ -30,8 +30,8 @@ def run_integer_encoding():
     positive_review = "I thought the movie was going to be bad but it was actually amazing"
     negative_review = "I thought the movie was going to be amazing but it was actually bad"
 
-    pos_encode = integer_encoding(positive_review)
-    neg_encode = integer_encoding(negative_review)
+    pos_encode, _ = integer_encoding(positive_review)
+    neg_encode, _  = integer_encoding(negative_review)
 
     print("Positive:", pos_encode,'\n')
     print("Negative:", neg_encode,'\n')
@@ -61,8 +61,9 @@ def bag_of_words(text,word_encoding):
 def run_bag_of_words():
     text = "this is a test to see if this test will work is is test a a"
     bag, vocab = bag_of_words(text,word_encoding=1)
-    print(bag,'\n')
-    print(vocab,'\n')
+    print('Text: ', text)
+    print('Encoding: ',bag,'\n')
+    print('Dictionary: ' ,vocab,'\n')
 
     positive_review = "I thought the movie was going to be bad but it was actually amazing"
     negative_review = "I thought the movie was going to be amazing but it was actually bad"
@@ -75,5 +76,7 @@ def run_bag_of_words():
 
 
 if __name__ == '__main__':
+    print('BAG OF WORDS \n')
     run_bag_of_words()
+    print('INTEGER ENCODING \n')
     run_integer_encoding()
