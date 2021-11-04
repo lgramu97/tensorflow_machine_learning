@@ -1,19 +1,40 @@
+def integer_encoding(text,word_encoding=1):
+    '''
+        This involves representing each word or character in a sentence as a unique integer 
+        and maintaining the order of these words.
+        This should hopefully fix the problem we saw before were we lost the order of words.
+    '''
+    vocab = {}  # maps word to integer representing it
+    words = text.lower().split(" ") 
+    encoding = []  
+
+    for word in words:
+        if word in vocab:
+            code = vocab[word]  
+            encoding.append(code) 
+        else:
+            vocab[word] = word_encoding
+            encoding.append(word_encoding)
+        word_encoding += 1
+    
+    return encoding, vocab
 
 
-def run_bag_of_words():
+def run_integer_encoding():
     text = "this is a test to see if this test will work is is test a a"
-    bag, vocab = bag_of_words(text,word_encoding=1)
-    print(bag,'\n')
-    print(vocab,'\n')
+    encoding, vocab = integer_encoding(text)
+    print('Text: ', text)
+    print('Encoding: ',encoding,'\n')
+    print('Dictionary: ' ,vocab,'\n')
 
     positive_review = "I thought the movie was going to be bad but it was actually amazing"
     negative_review = "I thought the movie was going to be amazing but it was actually bad"
 
-    pos_bag = bag_of_words(positive_review,1)
-    neg_bag = bag_of_words(negative_review,1)
+    pos_encode = integer_encoding(positive_review)
+    neg_encode = integer_encoding(negative_review)
 
-    print("Positive:", pos_bag,'\n')
-    print("Negative:", neg_bag,'\n')
+    print("Positive:", pos_encode,'\n')
+    print("Negative:", neg_encode,'\n')
 
 
 def bag_of_words(text,word_encoding):
@@ -37,9 +58,22 @@ def bag_of_words(text,word_encoding):
     return bag, vocab
 
 
-def run():
-    pass
+def run_bag_of_words():
+    text = "this is a test to see if this test will work is is test a a"
+    bag, vocab = bag_of_words(text,word_encoding=1)
+    print(bag,'\n')
+    print(vocab,'\n')
+
+    positive_review = "I thought the movie was going to be bad but it was actually amazing"
+    negative_review = "I thought the movie was going to be amazing but it was actually bad"
+
+    pos_bag, _ = bag_of_words(positive_review,1)
+    neg_bag, _ = bag_of_words(negative_review,1)
+
+    print("Positive:", pos_bag,'\n')
+    print("Negative:", neg_bag,'\n')
 
 
 if __name__ == '__main__':
     run_bag_of_words()
+    run_integer_encoding()
