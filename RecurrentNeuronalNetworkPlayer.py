@@ -140,6 +140,57 @@ def config_checkpoint(checkpoint_dir):
     return checkpoint_callback
 
 
+def load_model_chk(VOCAB_SIZE,EMBEDDING_DIM,RNN_UNITS,checkpoint_dir):
+    '''
+    We can load any checkpoint:
+    checkpoint_num = 10
+    model.load_weights(tf.train.load_checkpoint("./training_checkpoints/ckpt_" + str(checkpoint_num)))
+    model.build(tf.TensorShape([1, None]))
+    '''
+    model = build_model(VOCAB_SIZE, EMBEDDING_DIM, RNN_UNITS, batch_size=1)
+    model.load_weights(tf.train.latest_checkpoint(checkpoint_dir))
+    model.build(tf.TensorShape([1, None]))
+    return model
+
+
+def generate_text(model, start_string, char2idx, idx2char):
+  # Evaluation step (generating text using the learned model)
+
+  # Number of characters to generate
+  num_generate = 800
+
+  # Converting our start string to numbers (vectorizing)
+  input_eval = [char2idx[s] for s in start_string]
+  input_eval = tf.expand_dims(input_eval, 0)
+
+  # Empty string to store our results
+  text_generated = []
+
+  # Low temperatures results in more predictable text.
+  # Higher temperatures results in more surprising text.
+  # Experiment to find the best setting.
+  temperature = 1.0
+
+  # Here batch size == 1
+  model.reset_states()
+  for i in range(num_generate):
+      predictions = model(input_eval)
+      # remove the batch dimension
+    
+      predictions = tf.squeeze(predictions, 0)
+
+      # using a categorical distribution to predict the character returned by the model
+      predictions = predictions / temperature
+      predicted_id = tf.random.categorical(predictions, num_samples=1)[-1,0].numpy()
+
+      # We pass the predicted character as the next input to the model
+      # along with the previous hidden state
+      input_eval = tf.expand_dims([predicted_id], 0)
+
+      text_generated.append(idx2char[predicted_id])
+
+  return (start_string + ''.join(text_generated))
+
 
 def run():
     #First load the dataset.
@@ -152,41 +203,49 @@ def run():
 
     text_as_int = encode_decode(text,char2idx,idx2char)
     dataset = preprocess(text,text_as_int)
-
-    if False:
-        for x, y in dataset.take(2):
-            print("\n\nEXAMPLE\n")
-            print("INPUT")
-            print(int_to_text(x,idx2char))
-            print("\nOUTPUT")
-            print(int_to_text(y,idx2char))
-
+    
+    TRAIN = False
     BATCH_SIZE = 64
     VOCAB_SIZE = len(vocab)  # vocab is number of unique characters
     EMBEDDING_DIM = 256
     RNN_UNITS = 1024
+    CHK_DIR = './training_checkpoints'
 
-    # Buffer size to shuffle the dataset
-    # (TF data is designed to work with possibly infinite sequences,
-    # so it doesn't attempt to shuffle the entire sequence in memory. Instead,
-    # it maintains a buffer in which it shuffles elements).
-    BUFFER_SIZE = 10000
-    data = dataset.shuffle(BUFFER_SIZE).batch(BATCH_SIZE, drop_remainder=True)
+    if TRAIN:
+        if False:
+            for x, y in dataset.take(2):
+                print("\n\nEXAMPLE\n")
+                print("INPUT")
+                print(int_to_text(x,idx2char))
+                print("\nOUTPUT")
+                print(int_to_text(y,idx2char))
 
-    model = build_model(VOCAB_SIZE,EMBEDDING_DIM, RNN_UNITS, BATCH_SIZE)
-    model.summary()
+        # Buffer size to shuffle the dataset
+        # (TF data is designed to work with possibly infinite sequences,
+        # so it doesn't attempt to shuffle the entire sequence in memory. Instead,
+        # it maintains a buffer in which it shuffles elements).
+        BUFFER_SIZE = 10000
+        data = dataset.shuffle(BUFFER_SIZE).batch(BATCH_SIZE, drop_remainder=True)
 
-    spy_data(model,data,idx2char)
+        model = build_model(VOCAB_SIZE,EMBEDDING_DIM, RNN_UNITS, BATCH_SIZE)
+        model.summary()
 
-    #Compile the model with custom loss
-    model.compile(optimizer='adam', loss=loss)
+        spy_data(model,data,idx2char)
 
-    checkpoint_callback = config_checkpoint('./training_checkpoints')
+        #Compile the model with custom loss
+        model.compile(optimizer='adam', loss=loss)
 
-    #Train the model
-    history = model.fit(data, epochs=50, callbacks=[checkpoint_callback])
+        checkpoint_callback = config_checkpoint(CHK_DIR)
 
-
+        #Train the model
+        history = model.fit(data, epochs=20, callbacks=[checkpoint_callback])
+    
+    else:
+        # We'll rebuild the model from a checkpoint using a batch_size of 1 so that we 
+        # can feed one peice of text to the model and have it make a prediction.
+        model = load_model_chk(VOCAB_SIZE,EMBEDDING_DIM,RNN_UNITS,CHK_DIR)
+        inp = input("Type a starting string: ")
+        print(generate_text(model, inp,  char2idx, idx2char))
 
 
 
