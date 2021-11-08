@@ -160,8 +160,8 @@ def generate_text(model, start_string, char2idx, idx2char):
   num_generate = 800
 
   # Converting our start string to numbers (vectorizing)
-  input_eval = [char2idx[s] for s in start_string]
-  input_eval = tf.expand_dims(input_eval, 0)
+  input_eval = [char2idx[s] for s in start_string] # [1, 2 , 3, ...]
+  input_eval = tf.expand_dims(input_eval, 0)# [[1, 2 , 3, ...]]
 
   # Empty string to store our results
   text_generated = []
