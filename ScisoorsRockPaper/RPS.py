@@ -37,10 +37,11 @@ def player(prev_play, opponent_history=[]):
     if prev_play != '':
         opponent_history.append(prev_play)
 
-    #bots plays with the historial. Heuristic game with historial could beat them if find a pattern.
+    #bots plays with the background. Heuristic game with record could beat them if find a pattern.
     #return player_markov(opponent_history)
 
-    #Size to explore back.
+    #Size to explore back. Size 4 and 5 beat all but sometimes fail vs Abbey. 
+    #W/R vs Abbey = 58/65 % prev_n = 5
     prev_n = 5
 
     if len(opponent_history) > prev_n:
@@ -64,9 +65,3 @@ def player(prev_play, opponent_history=[]):
             return constants.beat_dict[guess]
 
     return predictor.RandomPredictor().predict()
-
-
-
-
-
-     
