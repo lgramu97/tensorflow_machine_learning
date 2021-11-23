@@ -6,6 +6,7 @@ import predictor
 import constants
 
 markov_matrix = predictor.MarkovPredictor(0.95,1)
+ocurrences =  {} # Key : pattern, Value : appearences
 
 def use_matrix(pair):
     global markov_matrix
@@ -23,10 +24,49 @@ def player_markov(opponent_history):
     return predictor.RandomPredictor.predict()
 
 
-def player(prev_play, opponent_history=[]):
-    opponent_history.append(prev_play)
+def update_occurrences(pattern):
+    global ocurrences
+    if pattern in ocurrences:
+        ocurrences[pattern] += 1
+    else:
+        ocurrences[pattern] = 1
 
-    return player_markov(opponent_history)
+
+def player(prev_play, opponent_history=[]):
+    global ocurrences
+    if prev_play != '':
+        opponent_history.append(prev_play)
+
+    #bots plays with the historial. Heuristic game with historial could beat them if find a pattern.
+    #return player_markov(opponent_history)
+
+    #Size to explore back.
+    prev_n = 5
+
+    if len(opponent_history) > prev_n:
+        #Create string with the pattern.
+        find = ''.join(opponent_history[-(prev_n):])
+        #Update number pattern x appear.
+        update_occurrences(find)
+        #Check possible combinations.
+        max = 0
+        guess = ''
+        for k in constants.keys:
+            #One previous to predict.
+            choosen = ''.join(opponent_history[(-prev_n+1):]) + k
+            #Check if pattern exists and get the most used.
+            if not choosen in ocurrences:
+                ocurrences[choosen] = 0
+            if (ocurrences[choosen] > max):
+                guess = k
+                max = ocurrences[choosen]
+        if guess != '':
+            return constants.beat_dict[guess]
+
+    return predictor.RandomPredictor().predict()
+
+
+
 
 
      
