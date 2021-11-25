@@ -1,5 +1,6 @@
 *.ipynb
 __pycache__/
+ScisoorsRockPaper/__pycache__/
 GermanTrafficSignRecognition/Models/
 GermanTrafficSignRecognition/GermanTrafficSignRecognitionBenchmark/Meta/
 GermanTrafficSignRecognition/GermanTrafficSignRecognitionBenchmark/Train/
