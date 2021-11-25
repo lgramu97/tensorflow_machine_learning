@@ -1,4 +1,4 @@
-*.ipynb
+/*.ipynb
 __pycache__/
 ScisoorsRockPaper/__pycache__/
 GermanTrafficSignRecognition/Models/
