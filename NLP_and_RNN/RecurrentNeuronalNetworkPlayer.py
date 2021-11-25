@@ -209,7 +209,7 @@ def run():
     VOCAB_SIZE = len(vocab)  # vocab is number of unique characters
     EMBEDDING_DIM = 256
     RNN_UNITS = 1024
-    CHK_DIR = './training_checkpoints'
+    CHK_DIR = './NLP_and_RNN/training_checkpoints'
 
     if TRAIN:
         if False:

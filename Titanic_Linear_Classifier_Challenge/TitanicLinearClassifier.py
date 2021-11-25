@@ -85,7 +85,7 @@ def make_input_fn(data_df, label_df, num_epochs=10, shuffle=True, batch_size=32)
    
 
 if __name__ == '__main__':
-    dataset_path = '/home/lautaro/Cursos/FreeCodeCampMachineLearning/'
+    dataset_path = './FreeCodeCampMachineLearning/Titanic_Linear_Classifier_Challenge'
     df_train, df_eval = load_datasets(dataset_path)
     #Get labels (Survived 1 - No Survived 0)
     y_train = df_train.pop('survived')

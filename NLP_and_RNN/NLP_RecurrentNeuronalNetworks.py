@@ -93,7 +93,7 @@ def RNN():
     #Plot the results
     plot_history(history)
     # we can save the model and reload it at anytime in the future
-    model.save('imbd_RNN.h5') 
+    model.save('/home/lautaro/Cursos/FreeCodeCampMachineLearning/NLP_and_RNN/imbd_RNN.h5') 
     results = model.evaluate(test_data, test_labels)
     print(results)
     plot_history(history)
@@ -141,7 +141,7 @@ def encode_decode(model,text):
 
 def predict():
     # If prediction < 0.5 then the prediction is positive.
-    model = tf.keras.models.load_model('imbd_RNN.h5')
+    model = tf.keras.models.load_model('/home/lautaro/Cursos/FreeCodeCampMachineLearning/NLP_and_RNN/imbd_RNN.h5')
     positive_review = "That movie was! really loved it and would great watch it again because it was amazingly great"
     encode_decode(model,positive_review)
 

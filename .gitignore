@@ -5,5 +5,5 @@ GermanTrafficSignRecognition/Models/
 GermanTrafficSignRecognition/GermanTrafficSignRecognitionBenchmark/Meta/
 GermanTrafficSignRecognition/GermanTrafficSignRecognitionBenchmark/Train/
 *.~lock
-training_checkpoints/
+NLP_and_RNN/training_checkpoints/
 

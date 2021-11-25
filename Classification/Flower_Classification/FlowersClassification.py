@@ -96,7 +96,7 @@ def predict(model):
 if __name__ == '__main__':
 
     #3 classes flowers: Setosa-Versicolor-Virginica
-    dataset_path = '/home/lautaro/Cursos/FreeCodeCampMachineLearning/'
+    dataset_path = './FreeCodeCampMachineLearning/Classification/Flowers_Classification/'
     x_train, x_test = load_datasets(dataset_path)
 
     #Looks like the last column is the label.
